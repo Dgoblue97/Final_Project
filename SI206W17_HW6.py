@@ -162,14 +162,17 @@ names_with_not_too_much_seniority = [x.name for x in programmers if len(x.name) 
 print("\n\n***** Problem 10 *****")
 
 ## Define a function called readfiles, which accepts a list of filenames as input and yields each line in each of the file with that name, assuming those files exist in the same directory as this program.
-def readfiles(list_fnames):
-    for file in list_fnames:
-        open_file = open(file, "r")
-        for line in open_file:
-            yield line
-        open_file.close()
+def readfiles(files):
+    for x in files:
+        new_file = open(x, "r")
+        for a in new_file:
+            yield a
+        new_file.close()
 ## Define a generator called len_check which accepts a generator of file lines and returns a generator object of all the lines it's accepted whose length is longer than 40 characters.
-
+def len_check(file_lines):
+    for x in file_lines:
+        if (len(x) > 40):
+            yield x
 ## Finally, write a function called main_filterer that accepts a list of filenames (strings), and returns a generator of all the lines in those files that are longer than 40 characters. The function should invoke the other function and generator, readfiles and len_check.
 
 ## There is a test for this but an even more fun test is to uncomment the code below which invokes the main_filterer function and prints each line from the generator without blank lines in between (that's what the comma is doing).
