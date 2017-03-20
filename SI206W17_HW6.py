@@ -174,7 +174,10 @@ def len_check(file_lines):
         if (len(x) > 40):
             yield x
 ## Finally, write a function called main_filterer that accepts a list of filenames (strings), and returns a generator of all the lines in those files that are longer than 40 characters. The function should invoke the other function and generator, readfiles and len_check.
-
+def main_filterer(a):
+    lines = readfiles(a)
+    b = len_check(lines)
+    return b
 ## There is a test for this but an even more fun test is to uncomment the code below which invokes the main_filterer function and prints each line from the generator without blank lines in between (that's what the comma is doing).
 
 ## The examples here http://anandology.com/python-practice-book/iterators.html in your reading may be very helpful!
