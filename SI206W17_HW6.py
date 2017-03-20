@@ -3,6 +3,7 @@ import json
 import unittest
 import random
 
+# Daniel Eilender
 ## As usual, this HW is worth 500 points in total.
 ## There are 10 problems. Each one is worth 50 points.
 
@@ -161,7 +162,12 @@ names_with_not_too_much_seniority = [x.name for x in programmers if len(x.name) 
 print("\n\n***** Problem 10 *****")
 
 ## Define a function called readfiles, which accepts a list of filenames as input and yields each line in each of the file with that name, assuming those files exist in the same directory as this program.
-
+def readfiles(list_fnames):
+    for file in list_fnames:
+        open_file = open(file, "r")
+        for line in open_file:
+            yield line
+        open_file.close()
 ## Define a generator called len_check which accepts a generator of file lines and returns a generator object of all the lines it's accepted whose length is longer than 40 characters.
 
 ## Finally, write a function called main_filterer that accepts a list of filenames (strings), and returns a generator of all the lines in those files that are longer than 40 characters. The function should invoke the other function and generator, readfiles and len_check.
