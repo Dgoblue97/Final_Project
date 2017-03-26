@@ -56,24 +56,33 @@ except:
 # Note that this is a lot like work you have done already in class (but, depending upon what you did previously, may not be EXACTLY the same, so be careful your code does exactly what you want here).
 
 
-# input_word = input("Enter a word to search ")
-def get_tweets_from_user(input_word):
+# def get_user_tweets(a):
+# 	if a in CACHE_DICTION:
+# 		results=CACHE_DICTION[a]
+		
+# 	else: 
+# 		results=api.user_timeline(screen_name=a)
+# 		CACHE_DICTION[a]=results
+# 		f=open(CACHE_FNAME, "w")
+# 		f.write(json.dumps(CACHE_DICTION))
+# 		f.close()
+# 		results = CACHE_DICTION[a]
+# 	status_results = results['statuses']
+# 	return status_results	
+input_word = input("Enter a handle to search ")
+def get_user_tweets(input_word):
 
-	unique_identifier = input_word
+	unique_identifier = 'twitter_{}'.format(input_word)
 	if unique_identifier in CACHE_DICTION: # if it is...
-		twitter_results = CACHE_DICTION[unique_identifier] # grab the data from the cache!
+		return CACHE_DICTION[unique_identifier] # grab the data from the cache!
 	else:
-		twitter_results = api.search(q = input_word) # get it from the internet
-		CACHE_DICTION[unique_identifier] = twitter_results # add it to the dictionary -- new key-val pair		# and then write the whole cache dictionary, now with new info added, to the file, so it'll be there even after your program closes!
-		f = open(CACHE_FNAME,'w') # open the cache file for writing
-		f.write(json.dumps(CACHE_DICTION)) # make the whole dictionary holding data and unique identifiers into a json-formatted string, and write that wholllle string to a file so you'll have it next time!
+		results = api.user_timeline(input_word)
+		CACHE_DICTION[unique_identifier]=results
+		f=open(CACHE_FNAME, "w")
+		f.write(json.dumps(CACHE_DICTION, indent = 2))
 		f.close()
-	
-	status_results = twitter_results['statuses']
-
-	return status_results[0:30]
-
-
+		twitter_results = CACHE_DICTION[unique_identifier]
+		return CACHE_DICTION[unique_identifier]
 # Write code to create/build a connection to a database: tweets.db,
 # And then load all of those tweets you got from Twitter into a database table called Tweets, with the following columns in each row:
 
@@ -102,7 +111,7 @@ conn.commit()
 statement_2 = 'INSERT INTO Tweets VALUES (?,?,?,?,?)'
 # Invoke the function you defined above to get a list that represents a bunch of tweets from the UMSI timeline. Save those tweets in a variable called umsi_tweets.
 
-umsi_tweets = get_tweets_from_user("UMSI")
+umsi_tweets = get_user_tweets(input_word)
 
 
 # Use a for loop, the cursor you defined above to execute INSERT statements, that insert the data from each of the tweets in umsi_tweets into the correct columns in each row of the Tweets database table.
