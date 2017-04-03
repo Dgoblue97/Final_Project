@@ -49,7 +49,7 @@ except:
 
 
 # Define your function get_user_tweets here:
-input_word = input("Enter a handle to search ")
+
 def get_user_tweets(input_word):
 
 	unique_identifier = 'twitter_{}'.format(input_word)
@@ -68,7 +68,7 @@ def get_user_tweets(input_word):
 
 # Write an invocation to the function for the "umich" user timeline and save the result in a variable called umich_tweets:
 
-umich_tweets = get_user_tweets(input_word)
+umich_tweets = get_user_tweets('umich')
 
 
 
@@ -110,17 +110,43 @@ cur.execute('DROP TABLE IF EXISTS Users')
 
 table_spec = 'CREATE TABLE IF NOT EXISTS '
 # NEED USER ID
-table_spec += 'Tweets (tweet_id INTEGER, author TEXT, time_posted TIMESTAMP, tweet_text TEXT, retweets INTEGER)'
+table_spec += 'Tweets (tweet_id TEXT PRIMARY KEY, text TEXT,user_id TEXT, time_posted TIMESTAMP, retweets INTEGER)'
 cur.execute(table_spec)
 new_statement = 'DELETE FROM Tweets'
 cur.execute(new_statement)
 conn.commit()
 
-table_spec += 'Users (user_id INTEGER, screen_name TEXT, num_favs INTEGER, description TEXT)'
+table_spec += 'Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER, description TEXT)'
 cur.execute(table_spec)
 new_statement = 'DELETE FROM Users'
 cur.execute(new_statement)
 conn.commit()
+
+
+list_of_tweets = []
+for a in umich_tweets: 
+	tweet_info = (a['id_str'],a['text'], a['user']['id_str'], a['created_at'], a['retweet_count'])
+	list_of_tweets.append(tweet_info)
+
+
+statement = 'INSERT INTO Tweets VALUES (?, ?, ?, ?, ?)'
+
+for x in list_of_tweets: 
+	cur.execute(statement, a)
+conn.commit()		
+
+
+
+statement_2 = 'INSERT INTO Users VALUES (?, ?, ?, ?)'
+
+for x in umich_tweets:
+	List_of_names = x["entities"]["user_mentions"]
+	for person in List_of_names:
+		a = api.get_user(person["screen_name"]) 
+		cur.execute(statement2, (a["id_str"], a["screen_name"], a["favourites_count"], a["description"]))
+
+conn.commit()
+
 
 
 
@@ -130,21 +156,26 @@ conn.commit()
 # All of the following sub-tasks require writing SQL statements and executing them using Python.
 
 # Make a query to select all of the records in the Users database. Save the list of tuples in a variable called users_info.
-
+cur.execute('SELECT * FROM Users')
+users_info = cur.fetchall()
 # Make a query to select all of the user screen names from the database. Save a resulting list of strings (NOT tuples, the strings inside them!) in the variable screen_names. HINT: a list comprehension will make this easier to complete!
 
-
+cur.execute("SELECT screen_name FROM Users")
+screen_names = [names[0] for names in cur.fetchall()]
 # Make a query to select all of the tweets (full rows of tweet information) that have been retweeted more than 25 times. Save the result (a list of tuples, or an empty list) in a variable called more_than_25_rts.
-
+cur.execute('SELECT * FROM Tweets WHERE retweets > 25')
+more_than_25_rts = cur.fetchall()
 
 
 # Make a query to select all the descriptions (descriptions only) of the users who have favorited more than 25 tweets. Access all those strings, and save them in a variable called descriptions_fav_users, which should ultimately be a list of strings.
 
-
+cur.execute("SELECT description FROM Users WHERE num_favs > 25")
+descriptions_fav_users = [x[0] for x in cur.fetchall()]
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 elements in each tuple: the user screenname and the text of the tweet -- for each tweet that has been retweeted more than 50 times. Save the resulting list of tuples in a variable called joined_result.
 
-
+cur.execute("SELECT Users.screen_name, Tweets.text FROM Users INNER JOIN Tweets ON Tweets.retweets > 10")
+joined_result = cur.fetchall()
 
 
 ## Task 4 - Manipulating data with comprehensions & libraries
@@ -163,8 +194,11 @@ conn.commit()
 
 
 
-### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END OF THE FILE HERE SO YOU DO NOT LOCK YOUR DATABASE (it's fixable, but it's a pain). ###
 
+
+
+### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END OF THE FILE HERE SO YOU DO NOT LOCK YOUR DATABASE (it's fixable, but it's a pain). ###
+conn.close()
 
 ###### TESTS APPEAR BELOW THIS LINE ######
 ###### Note that the tests are necessary to pass, but not sufficient -- must make sure you've followed the instructions accurately! ######
