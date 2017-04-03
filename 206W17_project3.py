@@ -104,22 +104,31 @@ cur = conn.cursor()
 ## HINT #2: You may want to go back to a structure we used in class this week to ensure that you reference the user correctly in each Tweet record.
 ## HINT #3: The users mentioned in each tweet are included in the tweet dictionary -- you don't need to do any manipulation of the Tweet text to find out which they are! Do some nested data investigation on a dictionary that represents 1 tweet to see it!
 
+# cur.execute('DROP TABLE IF EXISTS Tweets')
+# cur.execute('DROP TABLE IF EXISTS Users')
+
+
+# table_spec = 'CREATE TABLE IF NOT EXISTS '
+# # NEED USER ID
+# table_spec += 'Tweets(tweet_id TEXT PRIMARY KEY, text TEXT,user_id TEXT, time_posted TIMESTAMP, retweets INTEGER)'
+# cur.execute(table_spec)
+# # new_statement = 'DELETE FROM Tweets'
+# # cur.execute(new_statement)
+# conn.commit()
+
+# table_spec += 'Users(user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER, description TEXT)'
+# cur.execute(table_spec)
+# new_statement = 'DELETE FROM Users'
+# cur.execute(new_statement)
+
 cur.execute('DROP TABLE IF EXISTS Tweets')
 cur.execute('DROP TABLE IF EXISTS Users')
 
-
-table_spec = 'CREATE TABLE IF NOT EXISTS '
-# NEED USER ID
-table_spec += 'Tweets (tweet_id TEXT PRIMARY KEY, text TEXT,user_id TEXT, time_posted TIMESTAMP, retweets INTEGER)'
+table_spec = 'CREATE TABLE IF NOT EXISTS Tweets(tweet_id TEXT PRIMARY KEY, text TEXT, user_id TEXT, time_posted TIMESTAMP, retweets INTEGER)'
 cur.execute(table_spec)
-new_statement = 'DELETE FROM Tweets'
-cur.execute(new_statement)
-conn.commit()
 
-table_spec += 'Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER, description TEXT)'
+table_spec = 'CREATE TABLE IF NOT EXISTS Users(user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER, description TEXT)'
 cur.execute(table_spec)
-new_statement = 'DELETE FROM Users'
-cur.execute(new_statement)
 conn.commit()
 
 
@@ -132,18 +141,18 @@ for a in umich_tweets:
 statement = 'INSERT INTO Tweets VALUES (?, ?, ?, ?, ?)'
 
 for x in list_of_tweets: 
-	cur.execute(statement, a)
+	cur.execute(statement, x)
 conn.commit()		
 
 
 
-statement_2 = 'INSERT INTO Users VALUES (?, ?, ?, ?)'
+statement_2 = 'INSERT OR IGNORE INTO Users VALUES (?, ?, ?, ?)'
 
 for x in umich_tweets:
 	List_of_names = x["entities"]["user_mentions"]
 	for person in List_of_names:
 		a = api.get_user(person["screen_name"]) 
-		cur.execute(statement2, (a["id_str"], a["screen_name"], a["favourites_count"], a["description"]))
+		cur.execute(statement_2, (a["id_str"], a["screen_name"], a["favourites_count"], a["description"]))
 
 conn.commit()
 
@@ -204,7 +213,7 @@ twitter_info_diction = {}
 new_query = [("SELECT TEXT FROM Tweets INNER JOIN Users WHERE screen_name='" + scr_name + "'") for scr_name in screen_names]
 for info in new_query:
 	cur.execute(info)
-	all_info = cur.findall()
+	all_info = cur.fetchall()
 	names = screen_names[new_query.index(info)]
 	tweets = [a[0] for a in all_info]
 	twitter_info_diction[names] = tweets
