@@ -30,7 +30,7 @@ import sqlite3
 import requests_oauthlib
 import webbrowser
 import requests 
-
+from pprint import pprint
 
 consumer_key = twitter_info.consumer_key
 consumer_secret = twitter_info.consumer_secret
@@ -175,28 +175,20 @@ try:
 	file = open(twitter_cache_file, 'r')
 	file_contents = file.read()
 	twitter_cache_dictionary = json.loads(file_contents)
-else:
+except:
 	twitter_cache_dictionary = {}
-
-
-
-
-
-# def get_twitter_users(string):
-# 	a = re.findall('(?:@)([a-zA-Z0-9_]+)', string)
-# 	b = set(a)
-# 	return b
-
-
 
 
 def get_tweetdata_with_caching(input_word):
 
 	unique_identifier = input_word
 	if unique_identifier in twitter_cache_dictionary: # if it is...
-		twitter_results = twitter_cache_dictionary[unique_identifier] # grab the data from the cache!
+		twitter_results = twitter_cache_dictionary[unique_identifier]
+		# print('using twitter cache') # grab the data from the cache!
+		return twitter_results['statuses']
 	else:
-		twitter_results = api.search(q = unique_identifier)
+		twitter_results = api.search(q = unique_identifier,)
+		# print ('fetching twitter data')
 		twitter_cache_dictionary[unique_identifier] = twitter_results
 		f=open(twitter_cache_file, "w")
 		f.write(json.dumps(twitter_cache_dictionary))
@@ -205,13 +197,42 @@ def get_tweetdata_with_caching(input_word):
 		return twitter_results['statuses']
 
 
+List_twitter_search_titles = [] # Getting the titles of three movies from the list of movie instances
+for instance in list_of_movie_instances:
+	title = instance.title
+	List_twitter_search_titles.append(title)
 
 
 
+List_of_twitter_data_list = [] # Getting twitter data from either a cache or API by searching by movie title
+for search_term in List_twitter_search_titles:
+	
+	data = get_tweetdata_with_caching(search_term)
+	List_of_twitter_data_list.append(data)
+print (List_of_twitter_data_list)	
+
+class Tweet(object): # a class to pull out data from a list of twitter data, input is a list
+		def __init__(self, tweet_data):
+			for tweets in tweet_data:
+				self.tweet_id = tweets['id_str']
+				self.text = tweets['text']
+				self.user_id = tweets['user']['id_str']
+				self.favorites = tweets['favorite_count']
+				self.retweets = tweets['retweet_count']
 
 
 
+List_of_tweet_instances = []
 
+for data in List_of_twitter_data_list:
+	instance = Tweet(data)
+	List_of_tweet_instances.append(instance)
+List_of_tweet_tuples = []
+for instance in List_of_tweet_instances:
+	new_tuple = (instance.tweet_id, instance.text, instance.user_id, instance.favorites, instance.retweets)	
+	List_of_tweet_tuples.append(new_tuple)
+		
+	
 
 
 
