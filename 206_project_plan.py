@@ -60,9 +60,9 @@ def getwithcaching(movie_title):
 
 
 a = getwithcaching(movie_1)
-movie_data_list.append(a)
 b = getwithcaching(movie_2)
 c = getwithcaching(movie_3)
+movie_data_list.append(a)
 movie_data_list.append(b)
 movie_data_list.append(c)
 # def get_user_tweets(input_word):
@@ -139,7 +139,9 @@ list_of_movie_instances = []
 first_movie_instance = Movie[movie_data_list[0]]
 second_movie_instance = Movie[movie_data_list[1]]
 third_movie_instance = Movie[movie_data_list[2]]
-list_of_movie_instances.append(first_movie_instance,second_movie_instance,third_movie_instance)
+list_of_movie_instances.append(first_movie_instance)
+list_of_movie_instances.append(second_movie_instance)
+list_of_movie_instances.append(third_movie_instance)
 
 
 
@@ -154,7 +156,7 @@ try:
 	twitter_cache_dictionary = json.loads(file_contents)
 else:
 	twitter_cache_dictionary = {}
-		
+
 
 
 
