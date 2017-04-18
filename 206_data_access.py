@@ -265,6 +265,28 @@ class TweetUser(object): # a class to pull out data from a list of twitter data,
 				self.tweet_count = tweets['user']['statuses_count']
 				self.screen_name = tweets['user']['screen_name']
 
+
+
+List_of_tweet_User_instances = []
+
+for data in List_of_twitter_data_list:
+	instance = TweetUser(data)
+	List_of_tweet_User_instances.append(instance)
+
+List_of_tweet_user_tuples = []	
+for instance in List_of_tweet_User_instances:
+	new_tuple = (instance.user_id, instance.screen_name, instance.favorite_count, instance.num_of_followers, instance.tweet_count)	
+	List_of_tweet_user_tuples.append(new_tuple)
+	# if instance.screen_name not in twitter_user_dict:
+	# 	screename = instance.screen_name
+	# 	twitter_user_dict[screename] = 
+	# 	twitter_data_cache = open(twitter_user_file,'w')
+	# 	twitter_user_file.write()
+	# 	twitter_user_dict = json.loads(twitter_user_cachecontents)
+
+	# Caching Username here^^^^^^
+
+	
 # Follow similar pattern as above to make instances than cache by screename				
 
 
