@@ -65,10 +65,10 @@ except:
 def getwithcaching(movie_title): # function to either get movie data from cache or requests movie adata using title
 	BASE_URL='http://www.omdbapi.com?'
 	if movie_title in CACHE_DICTION:
-		print ('using cache')
+		# print ('using cache')
 		response_text=CACHE_DICTION[movie_title]
 	else:
-		print ('fetching')
+		# print ('fetching')
 		response = requests.get(BASE_URL, params={'t':movie_title})
 		CACHE_DICTION[movie_title] = response.text
 		response_text = response.text
@@ -103,7 +103,8 @@ class Movie(object): # Movie class that pulls data from movie dictionaries when 
 		self.rated = movie_data['Rated'].encode('utf-8')  
 		self.id = movie_data['imdbID']
 		self.director = movie_data['Director']
-		self.imdb_rating = movie_data['imdbRating']
+		self.imdb_rating_string = (movie_data['imdbRating'])
+		self.imdb_rating = float(self.imdb_rating_string)
 		self.movie_data = movie_data
 
 	def rating(self):
@@ -149,7 +150,7 @@ class Movie(object): # Movie class that pulls data from movie dictionaries when 
 		return len(all_languages)
 	def get_actors(self):
 		list_of_actors = self.movie_data['Actors'].split(',')
-		return (list_of_actors)	
+		return str(list_of_actors)	
 list_of_movie_instances = []
 
 for movie in movie_data_list: # Using a for loop to run each movie dictionary into the class Movie and make an instance. Then appending these instances into a list
@@ -162,8 +163,7 @@ movie_tuple_list = []
 for movie_instance in list_of_movie_instances: # This block of code is creating a list of three movie tuples containing data on three different movies
 	new_tuple = (movie_instance.id, movie_instance.title, movie_instance.plot, movie_instance.rated, movie_instance.director, movie_instance.imdb_rating, movie_instance.num_of_languages(), movie_instance.get_actors(), movie_instance.getMovieAudience())
 	movie_tuple_list.append(new_tuple)
-
-	
+		
 
 
 
@@ -209,7 +209,7 @@ for search_term in List_twitter_search_titles:
 	
 	data = get_tweetdata_with_caching(search_term)
 	List_of_twitter_data_list.append(data)
-print (List_of_twitter_data_list)	
+	
 
 class Tweet(object): # a class to pull out data from a list of twitter data, input is a list
 		def __init__(self, tweet_data):
@@ -219,7 +219,7 @@ class Tweet(object): # a class to pull out data from a list of twitter data, inp
 				self.user_id = tweets['user']['id_str']
 				self.favorites = tweets['favorite_count']
 				self.retweets = tweets['retweet_count']
-
+				
 
 
 List_of_tweet_instances = []
@@ -233,19 +233,44 @@ for instance in List_of_tweet_instances:
 	List_of_tweet_tuples.append(new_tuple)
 		
 	
+# Put data into a list of tuples
+
+# Then insert this data into Tweets Table
 
 
 
+#***********USERS*****************************************************************
+
+twitter_user_file = 'twitter_user_cache.json'
+
+try:
+	twitter_data_cache = open(twitter_user_file,'r')
+	twitter_user_cachecontents = twitter_data_cache.read()
+	twitter_user_dict = json.loads(twitter_user_cachecontents)
+
+except:
+
+	twitter_user_dict = {}
 
 
 
+class TweetUser(object): # a class to pull out data from a list of twitter data, input is a list
+		def __init__(self, tweet_data):
+			for tweets in tweet_data:
+				self.tweet_id = tweets['id_str']
+				self.text = tweets['text']
+				self.user_id = tweets['user']['id_str']
+				self.favorite_count = tweets['user']['favourites_count']
+				self.num_of_followers = tweets['user']['followers_count']
+				self.tweet_count = tweets['user']['statuses_count']
+				self.screen_name = tweets['user']['screen_name']
+
+# Follow similar pattern as above to make instances than cache by screename				
 
 
+# Once data is acquired put it into a list of tuples
 
-
-
-
-
+# Then insert this data into the Users Table
 
 
 
@@ -259,63 +284,113 @@ for instance in List_of_tweet_instances:
 
 
 
-# conn = sqlite3.connect('Final_Project.db')
-# cur = conn.cursor()
+conn = sqlite3.connect('Final_Project.db')
+cur = conn.cursor()
 
-# cur.execute('DROP TABLE IF EXISTS Tweets')
-# cur.execute('DROP TABLE IF EXISTS Users')
-# cur.execute('DROP TABLE IF EXISTS Movies')
-
-
-
-
-# table_spec = 'CREATE TABLE IF NOT EXISTS Tweets(tweet_id TEXT PRIMARY KEY, text TEXT, user_id TEXT, title TEXT, favorites INTEGER, retweets INTEGER)'
-# cur.execute(table_spec)
-
-# table_spec = 'CREATE TABLE IF NOT EXISTS Users(user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER)'
-# cur.execute(table_spec)
-
-# table_spec = 'CREATE TABLE IF NOT EXISTS Movies(movie_id TEXT PRIMARY KEY, title TEXT, director TEXT, num_of_languages INTEGER, imbd_rating INTEGER, top_billed TEXT)'
-# cur.execute(table_spec)
-# conn.commit()
+cur.execute('DROP TABLE IF EXISTS Tweets')
+cur.execute('DROP TABLE IF EXISTS Users')
+cur.execute('DROP TABLE IF EXISTS Movies')
 
 
 
 
-# conn.close()
+table_spec = 'CREATE TABLE IF NOT EXISTS Tweets(tweet_id TEXT PRIMARY KEY, text TEXT, user_id TEXT, title TEXT, favorites INTEGER, retweets INTEGER)'
+cur.execute(table_spec)
+
+table_spec = 'CREATE TABLE IF NOT EXISTS Users(user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER)'
+cur.execute(table_spec)
+
+table_spec = 'CREATE TABLE IF NOT EXISTS Movies(Movie_id TEXT PRIMARY KEY, Title TEXT, Plot TEXT, Rated TEXT, Director TEXT, imbd_rating INTEGER, num_of_languages INTEGER, Actors TEXT, Audience TEXT)'
+cur.execute(table_spec)
+conn.commit()
+
+statement = 'INSERT OR IGNORE INTO Movies Values (?,?,?,?,?,?,?,?,?)'
+for movie in movie_tuple_list:
+	cur.execute(statement, movie)
+conn.commit()	
+
+
+conn.close()
+
+
+
+
+
+# Join statments
+
+
+# Statment 1 will be an INNER Join matching movie title in MOVIES and favorites and user_id TWeets to see which tweet that mentioned a movie was favorited the most and the user_id of that person
+
+# Statement 2 will Join getMovieAudience, Plot, Actors, and Imdb_rating to return important information about the Movie
+
+# Statement 3 will be an InnerJoin selecting Tweets favorites with Movies titles and year to see  if tweets about more recent movies get more favorites
+
+#*************************DATA PROCESSING**************************************
+
+
+
+# mapping
+
+# collections
+
+#list comprehension
+
+#dictionary accumulation
+
+
+
+
+
+
+
+
+
+
+#******** Write to a Text File*******************************
+
+
+
+# Write my output from the 4 data manipulations into  test file
+
 
 # Put your tests here, with any edits you now need from when you turned them in with your project plan.
 
 # Attempt is an "instance of a movie"
 
-# class Tests(unittest.TestCase):
-# 	def test_1(self):
-# 		self.assertEqual(type(attempt.movieAppeal()), type('a'), "testing type of return value of movieAppeal method in the Movie Class")
-# 	def test_2(self):
-# 		self.assertEqual(attempt.movieAppeal(), 'This movie is very highly acclaimed', 'Testing the return value of movieAppeal method')	
-# 	def test_3(self):
-# 		self.assertEqual(attempt.title, movie_title, 'testting side effect of the consturctor to see if the instance variable is correct')
-# 	def test_4(self):
-# 		self.assertEqual(attempt.rated, "PG", 'Testing the side effect of the constructor to see if if the instance variable self.rated returns the correct rating')
-# 	def test_5(self):
-# 		self.assertEqual(attempt.getMovieAudience(), 'The Audience likes it more', 'Testing the return value of the getMovideAudience method')
-# 	def test_6(self):
-# 		conn = sqlite3.connect('Final_project.db')
-# 		cur = conn.cursor()
-# 		cur.execute('SELECT * FROM Users');
-# 		result = cur.fetchall()
-# 		self.assertTrue(len(result[1])==3,"Testing that there are 3 columns in the Users database")
-# 		conn.close()
-# 	def test_7(self):
-# 		self.assertTrue(Len(list_of_movie_instances) >= 3, 'Testing that the list of Movie instances has 3 or more instances of a movie') 
-# 	def test_8(self):
-# 		conn = sqlite3.connect('Final_project.db')
-# 		cur = conn.cursor()
-# 		cur.execute('SELECT * FROM Movies');
-# 		result = cur.fetchall()
-# 		self.assertTrue(len(result[2])==8,"Testing that there are 8 columns in the Movies table")
-# 		conn.close()	
+class Tests(unittest.TestCase):
+	# Write more test cases
+	def test_1(self):
+		attempt = list_of_movie_instances[0]
+		self.assertEqual(type(attempt.movieAppeal()), type('a'), "testing type of return value of movieAppeal method in the Movie Class")
+	def test_2(self):
+		attempt = list_of_movie_instances[0]
+		self.assertEqual(attempt.num_of_languages(), 1, 'Testing the return value of num_of_langauges method')	
+	def test_3(self):
+		attempt = list_of_movie_instances[0]
+		self.assertEqual(attempt.title, movie_1, 'testting side effect of the consturctor to see if the instance variable is correct')
+	def test_4(self):
+		attempt = list_of_movie_instances[0]
+		self.assertEqual(attempt.imdb_rating, 8.5, 'Testing the side effect of the constructor to see if if the instance variable self.imdb_rating returns the correct rating')
+	def test_5(self):
+		attempt = list_of_movie_instances[0]
+		self.assertEqual(attempt.getMovieAudience(), 'The Critics like it more', 'Testing the return value of the getMovideAudience method')
+	# def test_6(self):
+	# 	conn = sqlite3.connect('Final_project.db')
+	# 	cur = conn.cursor()
+	# 	cur.execute('SELECT * FROM Users');
+	# 	result = cur.fetchall()
+	# 	self.assertTrue(len(result[1])==3,"Testing that there are 3 columns in the Users database")
+	# 	conn.close()
+	def test_7(self):
+		self.assertEqual(len(list_of_movie_instances), 3, 'Testing that the list of Movie instances has 3 or more instances of a movie') 
+	def test_8(self):
+		conn = sqlite3.connect('Final_project.db')
+		cur = conn.cursor()
+		cur.execute('SELECT * FROM Movies');
+		result = cur.fetchall()
+		self.assertTrue(len(result[2])==9,"Testing that there are 9 columns in the Movies table")
+		conn.close()	
 
-# ## Remember to invoke all your tests...
+## Remember to invoke all your tests...
 
-# unittest.main(verbosity=2) 
+unittest.main(verbosity=2) 
