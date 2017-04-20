@@ -223,6 +223,9 @@ class Tweet(object): # a class to pull out data from a list of twitter data, inp
 			self.favorites = tweets['favorite_count']
 			self.retweets = tweets['retweet_count']
 			self.movie_id = ''
+			self.screen_name = tweets['user']['screen_name']
+
+			# need to get users mentioned from these tweets
 			for term in list_of_movie_instances:
 				if term.title.lower() in self.text:
 					self.movie_id = term.id
@@ -242,9 +245,11 @@ for data in List_of_twitter_data_list:
 		instance = Tweet(single_tweet)
 		List_of_tweet_instances.append(instance)
 List_of_tweet_tuples = []
+Screennames_list = []
 for instance in List_of_tweet_instances:
 	new_tuple = (instance.tweet_id, instance.text, instance.user_id, instance.favorites, instance.retweets, instance.movie_id)	
 	List_of_tweet_tuples.append(new_tuple)
+	Screennames_list.append(instance.screen_name)
 		
 	
 # Put data into a list of tuples
@@ -255,16 +260,34 @@ for instance in List_of_tweet_instances:
 
 #***********USERS*****************************************************************
 
-twitter_user_file = 'twitter_user_cache.json'
 
+CACHE_FNAME = "twitter_user_cache.json"
+# Put the rest of your caching setup here:
 try:
-	twitter_data_cache = open(twitter_user_file,'r')
-	twitter_user_cachecontents = twitter_data_cache.read()
-	twitter_user_dict = json.loads(twitter_user_cachecontents)
-
+	cache_file = open(CACHE_FNAME,'r')
+	cache_contents = cache_file.read()
+	cache_file.close()
+	CACHE_DICTION = json.loads(cache_contents)
 except:
+	CACHE_DICTION = {}
 
-	twitter_user_dict = {}
+
+# Define your function get_user_tweets here:
+
+def get_user_tweets_using_cache(input_word):
+
+	unique_identifier = 'twitter_{}'.format(input_word)
+	if unique_identifier in CACHE_DICTION: # if it is...
+		return CACHE_DICTION[unique_identifier] # grab the data from the cache!
+	else:
+		results = api.get_user(input_word)
+		CACHE_DICTION[unique_identifier]=results
+		f=open(CACHE_FNAME, "w")
+		f.write(json.dumps(CACHE_DICTION, indent = 2))
+		f.close()
+		twitter_results = CACHE_DICTION[unique_identifier]
+		return CACHE_DICTION[unique_identifier]
+
 
 
 
@@ -289,23 +312,20 @@ class TweetUser(object): # a class to pull out data from a list of twitter data,
 				elif term.title.upper() in self.text:
 					self.movie_id = term.id
 
+User_data_list = []
+for screen_name in Screennames_list:
+	data = get_user_tweets_using_cache(screen_name)
+	User_data_list.append(data)
+print (User_data_list[0])	
+# List_of_tweet_User_instances = []
 
-List_of_tweet_User_instances = []
-
-for data in List_of_twitter_data_list:
-	for single_user_tweet in data:
-		instance = TweetUser(single_user_tweet)
-		List_of_tweet_User_instances.append(instance)
+# for data in List_of_twitter_data_list:
+# 	for single_user_tweet in data:
+# 		instance = TweetUser(single_user_tweet)
+# 		List_of_tweet_User_instances.append(instance)
 
 
-	# if instance.screen_name not in twitter_user_dict:
-	# 	screename = instance.screen_name
-	# 	twitter_user_dict[screename] = 
-	# 	twitter_data_cache = open(twitter_user_file,'w')
-	# 	twitter_user_file.write()
-	# 	twitter_user_dict = json.loads(twitter_user_cachecontents)
 
-	# Caching Username here^^^^^^
 
 
 # Follow similar pattern as above to make instances than cache by screename				
@@ -313,10 +333,10 @@ for data in List_of_twitter_data_list:
 
 # Once data is acquired put it into a list of tuples
 
-List_of_tweet_user_tuples = []	
-for instance in List_of_tweet_User_instances:
-	new_tuple = (instance.user_id, instance.screen_name, instance.favorite_count, instance.num_of_followers, instance.tweet_count, instance.movie_id)	
-	List_of_tweet_user_tuples.append(new_tuple)
+# List_of_tweet_user_tuples = []	
+# for instance in List_of_tweet_User_instances:
+# 	new_tuple = (instance.user_id, instance.screen_name, instance.favorite_count, instance.num_of_followers, instance.tweet_count, instance.movie_id)	
+# 	List_of_tweet_user_tuples.append(new_tuple)
 
 
 # Then insert this data into the Users Table
@@ -369,17 +389,17 @@ for tweet in List_of_tweet_tuples:
 conn.commit()
 
 
-statement_3 = 'INSERT OR IGNORE INTO Users Values (?,?,?,?,?,?)'
+# statement_3 = 'INSERT OR IGNORE INTO Users Values (?,?,?,?,?,?)'
 
 
-for user in List_of_tweet_user_tuples:
-	if user[-1] == '':
-		pass
-	else:	
-		cur.execute(statement_3, user)
-conn.commit()
+# for user in List_of_tweet_user_tuples:
+# 	if user[-1] == '':
+# 		pass
+# 	else:	
+# 		cur.execute(statement_3, user)
+# conn.commit()
 
-conn.close()
+# conn.close()
 
 
 
