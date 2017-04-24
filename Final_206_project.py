@@ -434,7 +434,7 @@ public_data = cur.fetchall()
 
 conn.close()
 
-# mapping
+# DATA processing 1 and 2: Mapping and Collections
 
 def good_publicity_tweeters(object):
 	return [object[0], object[1]]
@@ -462,13 +462,9 @@ for tuples in a:
 
 
 
-# Counter
 
-# for tuples in public_data:
+# Data Processing 3: Dictionary Accumulation
 
-# list comprehension
-
-# dictionary accumulation 1
 James_Cameron_dict = {'Avatar':0, 'tweets about another movie':0}
 Ridley_Scott_dict = {'Gladiator':0, 'tweets about another movie':0}
 David_Anspaugh_dict = {'Hoosiers':0, 'tweets about another movie':0}
@@ -525,6 +521,7 @@ for director in List_director_dicts:
 
 
 
+# Data Processing 4: 
 
 
 
@@ -537,7 +534,12 @@ for director in List_director_dicts:
 
 # Write my output from the 4 data manipulations into  test file
 
-
+final_file = 'Finalproject_206.txt'
+opened_file = open(final_file,'w')
+for a in outputlist_1:
+	opened_file.write(a)
+for a in List_of_output_strings_2:
+	opened_file.write(a)	
 
 
 
