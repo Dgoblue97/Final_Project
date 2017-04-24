@@ -424,9 +424,9 @@ cool_movie_data = cur.fetchall()
 Director_movies_tweeted = 'SELECT Movies.Title, Tweets.search_term, Tweets.movie_id FROM Movies INNER JOIN Tweets ON Movies.Director = Tweets.search_term'
 cur.execute(Director_movies_tweeted)
 Dir_data = cur.fetchall()
-# print (str(Dir_data))
+# print (Dir_data)
 
-Publicity_tweeters = 'SELECT Tweets.search_term, Users.num_followers, Users.screen_name FROM Tweets INNER JOIN Users on Tweets.user_id = Users.user_id'
+Publicity_tweeters = 'SELECT Tweets.search_term, Users.num_followers, Users.screen_name FROM Tweets INNER JOIN Users on Tweets.user_id = Users.user_id WHERE Users.num_followers'
 cur.execute(Publicity_tweeters)
 public_data = cur.fetchall()
 # print (str(public_data))
@@ -436,11 +436,39 @@ conn.close()
 
 # mapping
 
-# collections
+def good_publicity_tweeters(object):
+	return [object[0], object[1]]
+
+diction_listvals = collections.defaultdict(list)
+	
+tweeters = map(good_publicity_tweeters,public_data)
+ 
+for a,b in tweeters:
+	diction_listvals[a].append(b)
+	new_followers_list = diction_listvals	
+for x in new_followers_list:
+	for values in new_followers_list[x]:
+		counter = 0
+		counter += values
+	new_followers_list[x] = counter		
+outputlist_1 = []
+
+a = list(new_followers_list.items())
+for tuples in a:
+	b = list(tuples)
+	string = 'The total number of followers from users and users mentioned in tweets about Director ' + str(b[0]) +' is ' +str(b[1])
+	outputlist_1.append(string)
+	print (string)
+
+
+
+# Counter
+
+# for tuples in public_data:
 
 # list comprehension
 
-# dictionary accumulation
+# dictionary accumulation 1
 James_Cameron_dict = {'Avatar':0, 'tweets about another movie':0}
 Ridley_Scott_dict = {'Gladiator':0, 'tweets about another movie':0}
 David_Anspaugh_dict = {'Hoosiers':0, 'tweets about another movie':0}
@@ -478,14 +506,22 @@ for tuples in Dir_data:
 				David_Anspaugh_dict['tweets about another movie'] = 1
 			else:
 				David_Anspaugh_dict['tweets about another movie'] += 1						
-print (James_Cameron_dict)
-print (Ridley_Scott_dict)
-print (David_Anspaugh_dict)				
+List_director_dicts = []
+List_director_dicts.append(James_Cameron_dict)		
+List_director_dicts.append(Ridley_Scott_dict)
+List_director_dicts.append(David_Anspaugh_dict)			
 
-
-			
-Output_1 = "Out of all the tweet searched for James Cameron "
-
+List_of_output_strings_2 = []
+for director in List_director_dicts:
+	if "Avatar" in director:
+		Output_1 = 'Out of all the tweets searched about James Cameron ' + str(director['Avatar']) + ' were about Avatar and ' + str(director['tweets about another movie']) + ' tweets were about another movie'
+	List_of_output_strings_2.append(Output_1)
+	if 'Gladiator' in director:
+		Output_2 = 'Out of all the tweets searched about Ridley Scott ' + str(director['Gladiator']) + ' were about Gladiator and ' + str(director['tweets about another movie']) + ' tweets were about another movie'
+		List_of_output_strings_2.append(Output_2)
+	if 'Hoosiers' in director:
+		Output_3 = 'Out of all the tweets searched about David Anspaugh ' + str(director['Hoosiers']) + ' were about Hoosiers and ' + str(director['tweets about another movie']) + ' tweets were about another movie'
+		List_of_output_strings_2.append(Output_3)	
 
 
 
