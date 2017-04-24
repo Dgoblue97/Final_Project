@@ -43,7 +43,7 @@ auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 
 movie_1 = 'Gladiator'
-movie_2 = 'Frozen'
+movie_2 = 'Hoosiers'
 movie_3 = 'Avatar'
 movie_list = [] # making a list of movie titles
 movie_list.append(movie_1)
@@ -151,6 +151,8 @@ class Movie(object): # Movie class that pulls data from movie dictionaries when 
 	def get_actors(self):
 		list_of_actors = self.movie_data['Actors'].split(',')
 		return str(list_of_actors)	
+
+
 list_of_movie_instances = []
 
 for movie in movie_data_list: # Using a for loop to run each movie dictionary into the class Movie and make an instance. Then appending these instances into a list
@@ -187,7 +189,7 @@ def get_tweetdata_with_caching(input_word):
 		# print('using twitter cache') # grab the data from the cache!
 		return twitter_results['statuses']
 	else:
-		twitter_results = api.search(q = unique_identifier)
+		twitter_results = api.search(q = unique_identifier, count = 50)
 		# print ('fetching twitter data')
 		twitter_cache_dictionary[unique_identifier] = twitter_results
 		f=open(twitter_cache_file, "w")
@@ -197,22 +199,22 @@ def get_tweetdata_with_caching(input_word):
 		return twitter_results['statuses']
 
 
-List_twitter_search_titles = [] # Getting the titles of three movies from the list of movie instances
+List_twitter_search_Directors = [] # Getting the Directors of three movies from the list of movie instances
 for instance in list_of_movie_instances:
-	title = instance.title
-	List_twitter_search_titles.append(title)
+	director = instance.director
+	List_twitter_search_Directors.append(director)
 
 
-
-List_of_twitter_data_list = [] # Getting twitter data from either a cache or API by searching by movie title
-for search_term in List_twitter_search_titles:
+# print (List_twitter_search_Directors)
+List_of_twitter_data_list = [] # Getting twitter data from either a cache or API by searching by Director name
+for search_term in List_twitter_search_Directors:
 	# print (search_term)
 	# print ("search term is above")
 
 	data = get_tweetdata_with_caching(search_term)
 
 	List_of_twitter_data_list.append(data)
-	
+# print(type(List_of_twitter_data_list[0][0]))
 # print (List_of_twitter_data_list)
 class Tweet(object): # a class to pull out data from a list of twitter data, input is a list
 		def __init__(self, tweets): # tweets represents one tweet dictionary
@@ -225,15 +227,24 @@ class Tweet(object): # a class to pull out data from a list of twitter data, inp
 			self.movie_id = ''
 			self.screen_name = tweets['user']['screen_name']
 
-			# need to get users mentioned from these tweets
+			self.user_mentions = tweets['entities']['user_mentions']
+			self.user_screenames = []
+			self.search_term = ''
 			for term in list_of_movie_instances:
 				if term.title.lower() in self.text:
 					self.movie_id = term.id
 				elif term.title in self.text:
-					
 					self.movie_id = term.id
 				elif term.title.upper() in self.text:
 					self.movie_id = term.id
+			for users in self.user_mentions:
+				self.user_screenames.append(users['screen_name'])
+			for term in List_twitter_search_Directors:
+				if term in self.text:
+					self.search_term = term
+
+			# need to get users mentioned from these tweets
+			
 				
 List_of_tweet_instances = []
 
@@ -243,14 +254,18 @@ List_of_tweet_instances = []
 for data in List_of_twitter_data_list:
 	for single_tweet in data: # list of twitter data list is alist of list
 		instance = Tweet(single_tweet)
+		# print (instance.user_screenames)
 		List_of_tweet_instances.append(instance)
 List_of_tweet_tuples = []
 Screennames_list = []
 for instance in List_of_tweet_instances:
-	new_tuple = (instance.tweet_id, instance.text, instance.user_id, instance.favorites, instance.retweets, instance.movie_id)	
+	new_tuple = (instance.tweet_id, instance.text, instance.user_id, instance.favorites, instance.retweets, instance.movie_id, instance.search_term)	
 	List_of_tweet_tuples.append(new_tuple)
 	Screennames_list.append(instance.screen_name)
-		
+	if instance.user_screenames != []:
+		for single_name in instance.user_screenames:
+			Screennames_list.append(single_name)
+# print (Screennames_list)		
 	
 # Put data into a list of tuples
 
@@ -274,9 +289,9 @@ except:
 
 # Define your function get_user_tweets here:
 
-def get_user_tweets_using_cache(input_word):
+def get_user_tweets_information(input_word):
 
-	unique_identifier = 'twitter_{}'.format(input_word)
+	unique_identifier = input_word
 	if unique_identifier in CACHE_DICTION: # if it is...
 		return CACHE_DICTION[unique_identifier] # grab the data from the cache!
 	else:
@@ -296,50 +311,35 @@ class TweetUser(object): # a class to pull out data from a list of twitter data,
 			# print (type(tweets))
 			# print (tweet_data)
 			self.tweet_id = tweets['id_str']
-			self.text = tweets['text']
+			
 			self.user_id = tweets['user']['id_str']
 			self.favorite_count = tweets['user']['favourites_count']
 			self.num_of_followers = tweets['user']['followers_count']
 			self.tweet_count = tweets['user']['statuses_count']
 			self.screen_name = tweets['user']['screen_name']
-			self.movie_id = ''
-			for term in list_of_movie_instances:
-				if term.title.lower() in self.text:
-					self.movie_id = term.id
-				elif term.title in self.text:
-					
-					self.movie_id = term.id
-				elif term.title.upper() in self.text:
-					self.movie_id = term.id
+			self.location = tweets['user']['location']
+			self.num_of_following = tweets['user']['friends_count']
 
 User_data_list = []
 for screen_name in Screennames_list:
-	data = get_user_tweets_using_cache(screen_name)
+	data = get_user_tweets_information(screen_name)
 	User_data_list.append(data)
-print (User_data_list[0])	
-# List_of_tweet_User_instances = []
+# print (User_data_list[0])	
 
-# for data in List_of_twitter_data_list:
-# 	for single_user_tweet in data:
-# 		instance = TweetUser(single_user_tweet)
-# 		List_of_tweet_User_instances.append(instance)
+List_of_tweet_User_instances = []
 
+for data in List_of_twitter_data_list:
+	for single_user_tweet in data:
+		instance = TweetUser(single_user_tweet)
+		List_of_tweet_User_instances.append(instance)
 
+List_of_tweet_user_tuples = []
 
-
-
-# Follow similar pattern as above to make instances than cache by screename				
-
-
-# Once data is acquired put it into a list of tuples
-
-# List_of_tweet_user_tuples = []	
-# for instance in List_of_tweet_User_instances:
-# 	new_tuple = (instance.user_id, instance.screen_name, instance.favorite_count, instance.num_of_followers, instance.tweet_count, instance.movie_id)	
-# 	List_of_tweet_user_tuples.append(new_tuple)
+for instance in List_of_tweet_User_instances:
+	new_tuple = (instance.user_id, instance.screen_name, instance.favorite_count, instance.num_of_followers, instance.num_of_following, instance.tweet_count, instance.location)	
+	List_of_tweet_user_tuples.append(new_tuple)
 
 
-# Then insert this data into the Users Table
 
 
 
@@ -362,13 +362,16 @@ cur.execute('DROP TABLE IF EXISTS Movies')
 
 
 
-table_spec = 'CREATE TABLE IF NOT EXISTS Tweets(tweet_id TEXT PRIMARY KEY, text TEXT, user_id TEXT, favorites INTEGER, retweets INTEGER, movie_id TEXT)'
+table_spec = 'CREATE TABLE IF NOT EXISTS Tweets(tweet_id TEXT PRIMARY KEY, text TEXT, user_id TEXT, favorites INTEGER, retweets INTEGER, movie_id TEXT, search_term TEXT)'
 cur.execute(table_spec)
 # Need to add title TEXT to Tweets
 
 
-table_spec = 'CREATE TABLE IF NOT EXISTS Users(user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER, num_followers INTEGER, num_tweets INTEGER, movie_id TEXT)'
+table_spec = 'CREATE TABLE IF NOT EXISTS Users(user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER, num_followers INTEGER, num_following INTEGER, num_tweets INTEGER, location TEXT)'
 cur.execute(table_spec)
+
+	
+
 
 table_spec = 'CREATE TABLE IF NOT EXISTS Movies(Movie_id TEXT PRIMARY KEY, Title TEXT, Plot TEXT, Rated TEXT, Director TEXT, imbd_rating INTEGER, num_of_languages INTEGER, Actors TEXT, Audience TEXT)'
 cur.execute(table_spec)
@@ -380,7 +383,7 @@ for movie in movie_tuple_list:
 conn.commit()	
 
 
-statement_2 = 'INSERT OR IGNORE INTO Tweets Values (?,?,?,?,?,?)'
+statement_2 = 'INSERT OR IGNORE INTO Tweets Values (?,?,?,?,?,?,?)'
 for tweet in List_of_tweet_tuples:
 	if tweet[-1] == '':
 		pass
@@ -389,23 +392,22 @@ for tweet in List_of_tweet_tuples:
 conn.commit()
 
 
-# statement_3 = 'INSERT OR IGNORE INTO Users Values (?,?,?,?,?,?)'
 
 
-# for user in List_of_tweet_user_tuples:
-# 	if user[-1] == '':
-# 		pass
-# 	else:	
-# 		cur.execute(statement_3, user)
-# conn.commit()
+statement_3 = 'INSERT OR IGNORE INTO Users Values (?,?,?,?,?,?,?)'
 
-# conn.close()
+for user in List_of_tweet_user_tuples:
+	cur.execute(statement_3, user)
+		
+conn.commit()
 
 
 
 
 
-# Join statments
+
+
+# *************Join statments ************************************
 
 
 # Statment 1 will be an INNER Join matching movie title in MOVIES and favorites and user_id TWeets to see which tweet that mentioned a movie was favorited the most and the user_id of that person
@@ -413,10 +415,24 @@ conn.commit()
 # Statement 2 will Join getMovieAudience, Plot, Actors, and Imdb_rating to return important information about the Movie
 
 # Statement 3 will be an InnerJoin selecting Tweets favorites with Movies titles and year to see  if tweets about more recent movies get more favorites
+Intresting_movie_data = 'SELECT Title, plot, Rated, Audience FROM Movies'
+cur.execute(Intresting_movie_data)
+cool_movie_data = cur.fetchall()
+# print (str(cool_movie_data))
 
+
+Director_movies_tweeted = 'SELECT Movies.Title, Tweets.search_term, Tweets.movie_id FROM Movies INNER JOIN Tweets ON Movies.Director = Tweets.search_term'
+cur.execute(Director_movies_tweeted)
+Dir_data = cur.fetchall()
+# print (str(Dir_data))
+
+Publicity_tweeters = 'SELECT Tweets.search_term, Users.num_followers, Users.screen_name FROM Tweets INNER JOIN Users on Tweets.user_id = Users.user_id'
+cur.execute(Publicity_tweeters)
+public_data = cur.fetchall()
+# print (str(public_data))
 #************************* DATA PROCESSING**************************************
 
-
+conn.close()
 
 # mapping
 
@@ -425,7 +441,50 @@ conn.commit()
 # list comprehension
 
 # dictionary accumulation
+James_Cameron_dict = {'Avatar':0, 'tweets about another movie':0}
+Ridley_Scott_dict = {'Gladiator':0, 'tweets about another movie':0}
+David_Anspaugh_dict = {'Hoosiers':0, 'tweets about another movie':0}
+for tuples in Dir_data:
+	if tuples[1] == 'James Cameron':
+		if tuples[2] != '':
+			if tuples[0] not in James_Cameron_dict:
+				James_Cameron_dict[tuples[0]] = 1
+			else:
+				James_Cameron_dict[tuples[0]] += 1
+		else:
+			if 'tweets about another movie' not in James_Cameron_dict:
+				James_Cameron_dict['tweets about another movie'] = 1
+			else:
+				James_Cameron_dict['tweets about another movie'] += 1
+	elif tuples[1] == 'Ridley Scott':
+		if tuples[2] != '':
+			if tuples[0] not in Ridley_Scott_dict:
+				Ridley_Scott_dict[tuples[0]] = 1
+			else:
+				Ridley_Scott_dict[tuples[0]] += 1
+		else:
+			if 'tweets about another movie' not in Ridley_Scott_dict:
+				Ridley_Scott_dict['tweets about another movie'] = 1
+			else:
+				Ridley_Scott_dict['tweets about another movie'] += 1
+	else:
+		if tuples[2] != '':
+			if tuples[0] not in David_Anspaugh_dict:
+				David_Anspaugh_dict[tuples[0]] = 1
+			else:
+				David_Anspaugh_dict[tuples[0]] += 1
+		else:
+			if 'tweets about another movie' not in David_Anspaugh_dict:
+				David_Anspaugh_dict['tweets about another movie'] = 1
+			else:
+				David_Anspaugh_dict['tweets about another movie'] += 1						
+print (James_Cameron_dict)
+print (Ridley_Scott_dict)
+print (David_Anspaugh_dict)				
 
+
+			
+Output_1 = "Out of all the tweet searched for James Cameron "
 
 
 
