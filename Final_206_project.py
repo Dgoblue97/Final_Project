@@ -371,7 +371,7 @@ cur.execute(table_spec)
 	
 
 
-table_spec = 'CREATE TABLE IF NOT EXISTS Movies(Movie_id TEXT PRIMARY KEY, Title TEXT, Plot TEXT, Rated TEXT, Director TEXT, imbd_rating INTEGER, num_of_languages INTEGER, Actors TEXT, Audience TEXT, Rating TEXT, Top_Actor TEXT)'
+table_spec = 'CREATE TABLE IF NOT EXISTS Movies(Movie_id TEXT PRIMARY KEY, Title TEXT, Plot TEXT, Rated TEXT, Director TEXT, imdb_rating INTEGER, num_of_languages INTEGER, Actors TEXT, Audience TEXT, Rating TEXT, Top_Actor TEXT)'
 cur.execute(table_spec)
 conn.commit()
 
@@ -424,10 +424,10 @@ cur.execute(Director_movies_tweeted)
 Dir_data = cur.fetchall()
 # print (Dir_data)
 
-Publicity_tweeters = 'SELECT Tweets.search_term, Users.num_followers, Users.screen_name FROM Tweets INNER JOIN Users on Tweets.user_id = Users.user_id WHERE Users.num_followers'
+Publicity_tweeters = 'SELECT Tweets.search_term, Users.num_followers, Users.screen_name FROM Tweets INNER JOIN Users on Tweets.user_id = Users.user_id'
 cur.execute(Publicity_tweeters)
 public_data = cur.fetchall()
-print (public_data)
+# print (public_data)
 #************************* DATA PROCESSING**************************************
 
 conn.close()
@@ -446,17 +446,17 @@ for a,b in tweeters:
 	new_followers_list = diction_listvals	
 	# print(new_followers_list)
 for x in new_followers_list:
-	# print (x)
+	print (x)
 	for values in new_followers_list[x]:
 		# print (values)
 		counter += values
 	new_followers_list[x] = counter		
+	print (new_followers_list)
 
-	# figure out why its not actaully adding
 outputlist_1 = []
 
 a = list(new_followers_list.items())
-print (a)
+# print (a)
 for tuples in a:
 	b = list(tuples)
 	string = 'The total number of followers from users and users mentioned in tweets about Director ' + str(b[0]) +' is ' +str(b[1]) + '\n\n'
@@ -564,10 +564,6 @@ opened_file.close()
 
 class Classes_Tests(unittest.TestCase):
 	
-
-	# Write more test cases***************************************************
-
-
 	def test_1(self):
 		attempt = list_of_movie_instances[0]
 		self.assertEqual(type(attempt.movieAppeal()), type('a'), "testing type of return value of movieAppeal method in the Movie Class")
@@ -598,6 +594,10 @@ class Classes_Tests(unittest.TestCase):
 	def test_10(self):
 		attempt = list_of_movie_instances[0]
 		self.assertIsInstance(attempt, Movie, 'Checking to see if this is an instance of the Class Movie')				
+
+
+
+
 class Caching_Tests(unittest.TestCase):
 	def test_1(self):
 		file = 'SI206_final_project_cache.json'
@@ -620,6 +620,10 @@ class Caching_Tests(unittest.TestCase):
 	def test_5(self):
 		a = get_user_tweets_information('TropicalEilend')
 		self.assertEqual(type(a),type({}),'Checking to make sure get_user_tweets_information returns the correct type')			
+
+
+
+
 class Database_Tests(unittest.TestCase):
 	
 	def test_1(self):
@@ -656,12 +660,18 @@ class Database_Tests(unittest.TestCase):
 		cur.execute('SELECT * FROM Movies');
 		result = cur.fetchall()
 		self.assertTrue(len(result)>=3, "Testing there are at least 3 Movies being loaded into the Movies datab")
-# class ProcessTest(unittest.TestCase):
-# 	def test_1(self):
-# 		a = (10,football,tennis)
-# 		b = get_publicity_tweeters(a)
-# 		print (type(b))
-# 		self.assertEqual(b,(10,football), 'Checking if this function has the right output')				
+
+
+
+class ProcessTest(unittest.TestCase):
+	def test_1(self):
+		test_tuple = ('baseball','football','tennis')
+		Test_function = get_publicity_tweeters(test_tuple)
+		self.assertEqual(type(Test_function), type(()), 'Checking if this function has the right output')
+	def test_2(self):
+		test_tuple = ('baseball','football','tennis')
+		Test_function = get_publicity_tweeters(test_tuple)
+		self.assertEqual(Test_function, ('baseball','football'), 'Checking if this function has the right output')					
 ## Remember to invoke all your tests...
 
 unittest.main(verbosity=2) 
