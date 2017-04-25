@@ -100,24 +100,24 @@ class Movie(object): # Movie class that pulls data from movie dictionaries when 
 		self.tomatoCriticMeter = int(self.tomatoCriticMeter_string) 
 		self.tomatoUserMeter_string = movie_data['Ratings'][1]['Value'][:1]
 		self.tomatoUserMeter = int(self.tomatoUserMeter_string)
-		self.rated = movie_data['Rated'].encode('utf-8')  
+		self.rated = movie_data['Rated']# .encode('utf-8') 
 		self.id = movie_data['imdbID']
 		self.director = movie_data['Director']
 		self.imdb_rating_string = (movie_data['imdbRating'])
 		self.imdb_rating = float(self.imdb_rating_string)
 		self.movie_data = movie_data
-
+		
 	def rating(self):
 		if self.rated =="NC-17":
-			return "The rating for " + self.title + " is " + self.rated + ": No One 17 and Under Admitted. Clearly adult. Children are not admitted."
+			return "The rating for " + self.title + " is " + self.rated + " : No One 17 and Under Admitted. Clearly adult. Children are not admitted."
 		elif self.rated =='R':
-			return "The rating for " + self.title + "is" + self.rated + ": Under 17 requires accompanying parent or adult guardian. Contains some adult material. Parents are urged to learn more about the film before taking their young children with them."
+			return "The rating for " + self.title + " is " + self.rated + " : Under 17 requires accompanying parent or adult guardian. Contains some adult material. Parents are urged to learn more about the film before taking their young children with them."
 		elif self.rated =="PG-13":
-			return "The rating for " + self.title + "is" + self.rated + ": Some material may be inappropriate for children under 13. Parents are urged to be cautious. Some material may be inappropriate for pre-teenagers."
+			return "The rating for " + self.title + " is " + self.rated + " : Some material may be inappropriate for children under 13. Parents are urged to be cautious. Some material may be inappropriate for pre-teenagers."
 		elif self.rated =="PG":
-			return "The rating for " + self.title + "is" + self.rated + ": Some material may not be suitable for children. Parents urged to give 'parental guidance'. May contain some material parents might not like for their young children."
+			return "The rating for " + self.title + " is " + self.rated + " : Some material may not be suitable for children. Parents urged to give 'parental guidance'. May contain some material parents might not like for their young children."
 		elif self.rated =="G":
-			return "The rating for " + self.title + "is" + self.rated + ": All ages admitted. Nothing that would offend parents for viewing by children."
+			return "The rating for " + self.title + " is " + self.rated + " : All ages admitted. Nothing that would offend parents for viewing by children."
 		else:
 			return self.title + " is unrated, viewers should watch at their own discretion."    
 
@@ -150,7 +150,10 @@ class Movie(object): # Movie class that pulls data from movie dictionaries when 
 		return len(all_languages)
 	def get_actors(self):
 		list_of_actors = self.movie_data['Actors'].split(',')
-		return str(list_of_actors)	
+		return str(list_of_actors)
+	def top_actor(self):
+		list_of_actors = self.movie_data['Actors'].split(',')
+		return list_of_actors[0]		
 
 
 list_of_movie_instances = []
@@ -163,7 +166,7 @@ for movie in movie_data_list: # Using a for loop to run each movie dictionary in
 movie_tuple_list = []
 
 for movie_instance in list_of_movie_instances: # This block of code is creating a list of three movie tuples containing data on three different movies
-	new_tuple = (movie_instance.id, movie_instance.title, movie_instance.plot, movie_instance.rated, movie_instance.director, movie_instance.imdb_rating, movie_instance.num_of_languages(), movie_instance.get_actors(), movie_instance.getMovieAudience())
+	new_tuple = (movie_instance.id, movie_instance.title, movie_instance.plot, movie_instance.rated, movie_instance.director, movie_instance.imdb_rating, movie_instance.num_of_languages(), movie_instance.get_actors(), movie_instance.getMovieAudience(), movie_instance.rating(), movie_instance.top_actor())
 	movie_tuple_list.append(new_tuple)
 		
 
@@ -373,11 +376,11 @@ cur.execute(table_spec)
 	
 
 
-table_spec = 'CREATE TABLE IF NOT EXISTS Movies(Movie_id TEXT PRIMARY KEY, Title TEXT, Plot TEXT, Rated TEXT, Director TEXT, imbd_rating INTEGER, num_of_languages INTEGER, Actors TEXT, Audience TEXT)'
+table_spec = 'CREATE TABLE IF NOT EXISTS Movies(Movie_id TEXT PRIMARY KEY, Title TEXT, Plot TEXT, Rated TEXT, Director TEXT, imbd_rating INTEGER, num_of_languages INTEGER, Actors TEXT, Audience TEXT, Rating TEXT, Top_Actor TEXT)'
 cur.execute(table_spec)
 conn.commit()
 
-statement = 'INSERT OR IGNORE INTO Movies Values (?,?,?,?,?,?,?,?,?)'
+statement = 'INSERT OR IGNORE INTO Movies Values (?,?,?,?,?,?,?,?,?,?,?)'
 for movie in movie_tuple_list:
 	cur.execute(statement, movie)
 conn.commit()	
@@ -415,7 +418,7 @@ conn.commit()
 # Statement 2 will Join getMovieAudience, Plot, Actors, and Imdb_rating to return important information about the Movie
 
 # Statement 3 will be an InnerJoin selecting Tweets favorites with Movies titles and year to see  if tweets about more recent movies get more favorites
-Intresting_movie_data = 'SELECT Title, plot, Rated, Audience FROM Movies'
+Intresting_movie_data = 'SELECT Title, plot, Rated, Audience, Rating FROM Movies'
 cur.execute(Intresting_movie_data)
 cool_movie_data = cur.fetchall()
 # print (str(cool_movie_data))
@@ -436,12 +439,12 @@ conn.close()
 
 # DATA processing 1 and 2: Mapping and Collections
 
-def good_publicity_tweeters(object):
+def get_publicity_tweeters(object):
 	return [object[0], object[1]]
 
 diction_listvals = collections.defaultdict(list)
 	
-tweeters = map(good_publicity_tweeters,public_data)
+tweeters = map(get_publicity_tweeters,public_data)
  
 for a,b in tweeters:
 	diction_listvals[a].append(b)
@@ -456,9 +459,9 @@ outputlist_1 = []
 a = list(new_followers_list.items())
 for tuples in a:
 	b = list(tuples)
-	string = 'The total number of followers from users and users mentioned in tweets about Director ' + str(b[0]) +' is ' +str(b[1])
+	string = 'The total number of followers from users and users mentioned in tweets about Director ' + str(b[0]) +' is ' +str(b[1]) + '\n\n'
 	outputlist_1.append(string)
-	print (string)
+	
 
 
 
@@ -491,7 +494,7 @@ for tuples in Dir_data:
 				Ridley_Scott_dict['tweets about another movie'] = 1
 			else:
 				Ridley_Scott_dict['tweets about another movie'] += 1
-	else:
+	if tuples[1] == 'David Anspaugh':
 		if tuples[2] != '':
 			if tuples[0] not in David_Anspaugh_dict:
 				David_Anspaugh_dict[tuples[0]] = 1
@@ -510,22 +513,25 @@ List_director_dicts.append(David_Anspaugh_dict)
 List_of_output_strings_2 = []
 for director in List_director_dicts:
 	if "Avatar" in director:
-		Output_1 = 'Out of all the tweets searched about James Cameron ' + str(director['Avatar']) + ' were about Avatar and ' + str(director['tweets about another movie']) + ' tweets were about another movie'
-	List_of_output_strings_2.append(Output_1)
+		Output_1 = 'Out of all the tweets searched about James Cameron ' + str(director['Avatar']) + ' were about Avatar and ' + str(director['tweets about another movie']) + ' tweets were about another movie' + '\n\n'
+		List_of_output_strings_2.append(Output_1)
 	if 'Gladiator' in director:
-		Output_2 = 'Out of all the tweets searched about Ridley Scott ' + str(director['Gladiator']) + ' were about Gladiator and ' + str(director['tweets about another movie']) + ' tweets were about another movie'
+		Output_2 = 'Out of all the tweets searched about Ridley Scott ' + str(director['Gladiator']) + ' were about Gladiator and ' + str(director['tweets about another movie']) + ' tweets were about another movie' + '\n\n'
 		List_of_output_strings_2.append(Output_2)
 	if 'Hoosiers' in director:
-		Output_3 = 'Out of all the tweets searched about David Anspaugh ' + str(director['Hoosiers']) + ' were about Hoosiers and ' + str(director['tweets about another movie']) + ' tweets were about another movie'
+		Output_3 = 'Out of all the tweets searched about David Anspaugh ' + str(director['Hoosiers']) + ' were about Hoosiers and ' + str(director['tweets about another movie']) + ' tweets were about another movie' + '\n\n'
 		List_of_output_strings_2.append(Output_3)	
 
 
 
 # Data Processing 4: 
 
-
-
-
+output_string_list_3 = []
+rating_output = sorted(cool_movie_data, key = lambda x: x[-2], reverse = True)
+for a in rating_output:
+	output_string_3 = 'The movies are sorted by rating. A cool thing about ' + str(a[0]) + ' is that ' + str(a[3]) + ' and it is rated ' + str(a[2]) + '. The plot of this movie is ' + str(a[1])  + ' Lastly ' + str(a[4]) + '\n\n'
+	output_string_list_3.append(output_string_3)
+	
 
 #******** Write to a Text File *******************************
 
@@ -536,11 +542,14 @@ for director in List_director_dicts:
 
 final_file = 'Finalproject_206.txt'
 opened_file = open(final_file,'w')
+opened_file.write('The three movies are Avatar, Hoosiers and Gladiator. The directors of the movies are James Cameron, David Anspaugh and Ridley Scott. The date is 4/25/17 \n\n')
 for a in outputlist_1:
-	opened_file.write(a)
-for a in List_of_output_strings_2:
-	opened_file.write(a)	
-
+	opened_file.write(a + '\n\n')
+for b in List_of_output_strings_2:
+	opened_file.write(b)	
+for c in output_string_list_3:
+	opened_file.write(c)
+opened_file.close()	
 
 
 
@@ -549,11 +558,10 @@ for a in List_of_output_strings_2:
 
 # Attempt is an "instance of a movie"
 
-class Tests(unittest.TestCase):
+class Classes_Tests(unittest.TestCase):
 	
 
 	# Write more test cases***************************************************
-
 
 
 	def test_1(self):
@@ -571,23 +579,70 @@ class Tests(unittest.TestCase):
 	def test_5(self):
 		attempt = list_of_movie_instances[0]
 		self.assertEqual(attempt.getMovieAudience(), 'The Critics like it more', 'Testing the return value of the getMovideAudience method')
-	# def test_6(self):
-	# 	conn = sqlite3.connect('Final_project.db')
-	# 	cur = conn.cursor()
-	# 	cur.execute('SELECT * FROM Users');
-	# 	result = cur.fetchall()
-	# 	self.assertTrue(len(result[1])==3,"Testing that there are 3 columns in the Users database")
-	# 	conn.close()
-	def test_7(self):
+	def test_6(self):
 		self.assertEqual(len(list_of_movie_instances), 3, 'Testing that the list of Movie instances has 3 or more instances of a movie') 
-	def test_8(self):
+	def test_7(self):
+		attempt = List_of_tweet_instances[0]
+		b =attempt.search_term
+		self.assertIn(b, List_twitter_search_Directors, 'Testing that the search term for this instance is one of the directors from our searched movies')	
+class Caching_Tests(unittest.TestCase):
+	def test_1(self):
+		file = 'SI206_final_project_cache.json'
+		test_string = open(file, 'r')
+		reading_string = test_string.read()
+		self.assertTrue('Avatar' in reading_string, 'Checking to see if Avatar is in the movie cache file')
+		test_string.close()
+	def test_2(self):
+		file = 'SI206_final_project_cache.json'
+		test_string = open(file, 'r')
+		reading_string = test_string.read()
+		self.assertTrue('Hoosiers' in reading_string, 'Checking to see if Hoosiers is in the movie cache file')
+		test_string.close()	
+	def test_3(self):
+		a = getwithcaching('The Dark Knight')
+		self.assertEqual(type(a),type({}),'Checking to make sure getwithcaching returns the correct type')
+	def test_4(self):
+		a = get_tweetdata_with_caching('Steven Spielberg')
+		self.assertEqual(type(a),type([]),'Checking to make sure get_tweetdata_with_caching returns the correct type')
+	def test_5(self):
+		a = get_user_tweets_information('TropicalEilend')
+		self.assertEqual(type(a),type({}),'Checking to make sure get_user_tweets_information returns the correct type')			
+class Database_Tests(unittest.TestCase):
+	
+	def test_1(self):
+		conn = sqlite3.connect('Final_project.db')
+		cur = conn.cursor()
+		cur.execute('SELECT * FROM Users');
+		result = cur.fetchall()
+		self.assertTrue(len(result[1])==7,"Testing that there are 7 columns in the Users database")
+		conn.close()
+
+	def test_2(self):
 		conn = sqlite3.connect('Final_project.db')
 		cur = conn.cursor()
 		cur.execute('SELECT * FROM Movies');
 		result = cur.fetchall()
-		self.assertTrue(len(result[2])==9,"Testing that there are 9 columns in the Movies table")
+		self.assertTrue(len(result[2])==11,"Testing that there are 9 columns in the Movies table")
 		conn.close()	
-
+	def test_3(self):
+		conn = sqlite3.connect('Final_project.db')
+		cur = conn.cursor()
+		cur.execute('SELECT * FROM Tweets');
+		result = cur.fetchall()
+		self.assertTrue(len(result[1])==7,"Testing that there are 7 columns in the Users database")
+		conn.close()
+	def test_4(self):
+		conn = sqlite3.connect('Final_project.db')
+		cur = conn.cursor()
+		cur.execute('SELECT * FROM Users');
+		result = cur.fetchall()
+		self.assertTrue(len(result)>=10,"Testing that there are at least 10 distinct users in the Users table")		
+	def test_5(self):
+		conn = sqlite3.connect('Final_project.db')
+		cur = conn.cursor()
+		cur.execute('SELECT * FROM Movies');
+		result = cur.fetchall()
+		self.assertTrue(len(result)>=3, "Testing there are at least 3 Movies being loaded into the Movies datab")	
 ## Remember to invoke all your tests...
 
 unittest.main(verbosity=2) 
