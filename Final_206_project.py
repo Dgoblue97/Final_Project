@@ -27,8 +27,6 @@ import tweepy
 import twitter_info # same deal as always...
 import json
 import sqlite3
-import requests_oauthlib
-import webbrowser
 import requests 
 from pprint import pprint
 
@@ -141,9 +139,6 @@ class Movie(object): # Movie class that pulls data from movie dictionaries when 
 			return "This movie was not recieved well"
 		else:
 			return "Oops, thats not a movie!"					
-
-	def __str__(self):
-		return 'The movie {} came out in {}. The plot is: {}'.format(self.title, self.release_year, self.plot)
       
 	def num_of_languages(self):
 		all_languages = self.movie_data['Language'].split(',')
@@ -432,7 +427,7 @@ Dir_data = cur.fetchall()
 Publicity_tweeters = 'SELECT Tweets.search_term, Users.num_followers, Users.screen_name FROM Tweets INNER JOIN Users on Tweets.user_id = Users.user_id WHERE Users.num_followers'
 cur.execute(Publicity_tweeters)
 public_data = cur.fetchall()
-# print (str(public_data))
+print (public_data)
 #************************* DATA PROCESSING**************************************
 
 conn.close()
@@ -440,23 +435,28 @@ conn.close()
 # DATA processing 1 and 2: Mapping and Collections
 
 def get_publicity_tweeters(object):
-	return [object[0], object[1]]
+	return (object[0], object[1])
 
 diction_listvals = collections.defaultdict(list)
-	
+
 tweeters = map(get_publicity_tweeters,public_data)
- 
+counter = 0
 for a,b in tweeters:
 	diction_listvals[a].append(b)
 	new_followers_list = diction_listvals	
+	# print(new_followers_list)
 for x in new_followers_list:
+	# print (x)
 	for values in new_followers_list[x]:
-		counter = 0
+		# print (values)
 		counter += values
 	new_followers_list[x] = counter		
+
+	# figure out why its not actaully adding
 outputlist_1 = []
 
 a = list(new_followers_list.items())
+print (a)
 for tuples in a:
 	b = list(tuples)
 	string = 'The total number of followers from users and users mentioned in tweets about Director ' + str(b[0]) +' is ' +str(b[1]) + '\n\n'
@@ -552,6 +552,10 @@ for c in output_string_list_3:
 opened_file.close()	
 
 
+# a = ('10',football,tennis)
+# b = get_publicity_tweeters(a)
+# print (type(b))
+# print (b)
 
 # ********************* TEST CASES *******************************
 # Put your tests here, with any edits you now need from when you turned them in with your project plan.
@@ -572,7 +576,7 @@ class Classes_Tests(unittest.TestCase):
 		self.assertEqual(attempt.num_of_languages(), 1, 'Testing the return value of num_of_langauges method')	
 	def test_3(self):
 		attempt = list_of_movie_instances[0]
-		self.assertEqual(attempt.title, movie_1, 'testting side effect of the consturctor to see if the instance variable is correct')
+		self.assertEqual(attempt.title, movie_1, 'Testing side effect of the consturctor to see if the instance variable is correct')
 	def test_4(self):
 		attempt = list_of_movie_instances[0]
 		self.assertEqual(attempt.imdb_rating, 8.5, 'Testing the side effect of the constructor to see if if the instance variable self.imdb_rating returns the correct rating')
@@ -584,7 +588,16 @@ class Classes_Tests(unittest.TestCase):
 	def test_7(self):
 		attempt = List_of_tweet_instances[0]
 		b =attempt.search_term
-		self.assertIn(b, List_twitter_search_Directors, 'Testing that the search term for this instance is one of the directors from our searched movies')	
+		self.assertIn(b, List_twitter_search_Directors, 'Testing that the search term for this instance is one of the directors from our searched movies')
+	def test_8(self):
+		attempt = List_of_tweet_instances[0]
+		self.assertIsInstance(attempt,Tweet, 'Checking to see if this is an instance of the Class Tweet')
+	def test_9(self):
+		attempt = List_of_tweet_User_instances[0]
+		self.assertIsInstance(attempt,TweetUser, 'Checking to see if this is an instance of the Class TweetUser')
+	def test_10(self):
+		attempt = list_of_movie_instances[0]
+		self.assertIsInstance(attempt, Movie, 'Checking to see if this is an instance of the Class Movie')				
 class Caching_Tests(unittest.TestCase):
 	def test_1(self):
 		file = 'SI206_final_project_cache.json'
@@ -642,7 +655,13 @@ class Database_Tests(unittest.TestCase):
 		cur = conn.cursor()
 		cur.execute('SELECT * FROM Movies');
 		result = cur.fetchall()
-		self.assertTrue(len(result)>=3, "Testing there are at least 3 Movies being loaded into the Movies datab")	
+		self.assertTrue(len(result)>=3, "Testing there are at least 3 Movies being loaded into the Movies datab")
+# class ProcessTest(unittest.TestCase):
+# 	def test_1(self):
+# 		a = (10,football,tennis)
+# 		b = get_publicity_tweeters(a)
+# 		print (type(b))
+# 		self.assertEqual(b,(10,football), 'Checking if this function has the right output')				
 ## Remember to invoke all your tests...
 
 unittest.main(verbosity=2) 
